@@ -1,0 +1,109 @@
+getgenv().Server_Hop = true
+getgenv().wait_Time = 35 -- Thời gian chờ giữa các lần đổi server ( tính bằng giây)
+
+local placeId = game.PlaceId
+if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
+    repeat wait() until game:IsLoaded()
+
+    local AllIDs = {}
+    local foundAnything = ""
+    local actualHour = os.date("!*t").hour
+
+    -- Đọc và lưu danh sách server ID
+    local File = pcall(function()
+        AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
+    end)
+    if not File then
+        writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode({actualHour}))
+    end
+
+    function TPReturner()
+        local Site
+        if foundAnything == "" then
+            Site = game:HttpGet('https://games.roblox.com/v1/games/' .. placeId .. '/servers/Public?sortOrder=Asc&limit=100')
+        else
+            Site = game:HttpGet('https://games.roblox.com/v1/games/' .. placeId .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything)
+        end
+
+        local Servers = game:GetService('HttpService'):JSONDecode(Site)
+        if Servers.nextPageCursor then
+            foundAnything = Servers.nextPageCursor
+        end
+
+        for _, v in pairs(Servers.data) do
+            local ID = tostring(v.id)
+            if tonumber(v.playing) < tonumber(v.maxPlayers) then
+                local found = false
+                for _, Existing in pairs(AllIDs) do
+                    if Existing == ID then
+                        found = true
+                        break
+                    end
+                end
+
+                if not found then
+                    table.insert(AllIDs, ID)
+                    writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+                    game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, ID, game.Players.LocalPlayer)
+                    wait(1.5) 
+                    break
+                end
+            end
+        end
+    end
+
+    function TeleportToChests()
+        while true do
+            pcall(function()
+                local ChestModels = game:GetService("Workspace"):FindFirstChild("ChestModels")
+                if ChestModels then
+                    local priorityChests = {"DiamondChest", "GoldChest", "SilverChest"}
+                    for _, chestType in ipairs(priorityChests) do
+                        for _, chest in pairs(ChestModels:GetChildren()) do
+                            if chest.Name == chestType and chest:FindFirstChild("RootPart") then
+                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = chest.RootPart.CFrame
+                                wait(0.6) -- Giảm tốc độ teleport thêm
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, chest.RootPart, 0) -- Touch
+                                wait(0.1)
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, chest.RootPart, 1) -- Untouch
+                            end
+                        end
+                    end
+                end
+            end)
+            wait(0.3) -- Giảm thời gian chờ giữa các lần teleport
+        end
+    end
+
+    -- Set Team
+    spawn(function()
+        local ohString1 = "SetTeam"
+        local ohString2 = "Pirates" -- Thay bằng "Marines" nếu chọn Marines
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(ohString1, ohString2)
+    end)
+
+    -- Hop Server
+    spawn(function()
+        while wait() do
+            if Server_Hop then
+                wait(wait_Time)
+                TPReturner()
+                print("Đang tìm server mới...")
+            end
+        end
+    end)
+
+    -- Teleport to chests
+    spawn(TeleportToChests)
+
+    -- Handle Kick Detection and Respawn
+    local function KickHandler()
+        while wait(2) do 
+            if game.Players.LocalPlayer.UserId and not game.Players.LocalPlayer.Character then
+                TPReturner()
+            end
+        end
+    end
+
+    spawn(KickHandler)
+end 
