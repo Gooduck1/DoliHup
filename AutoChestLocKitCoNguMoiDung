@@ -1,5 +1,5 @@
 getgenv().Server_Hop = true
-getgenv().wait_Time = 30 -- Thời gian chờ giữa các lần đổi server (giây)
+getgenv().wait_Time = 30 -- Giảm thời gian chờ xuống 15 giây
 
 local placeId = game.PlaceId
 if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
@@ -44,7 +44,9 @@ if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
                 if not found then
                     table.insert(AllIDs, ID)
                     writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
-                    game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, ID, game.Players.LocalPlayer)
+                    pcall(function()
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, ID, game.Players.LocalPlayer)
+                    end)
                     wait(4)
                     break
                 end
@@ -67,12 +69,14 @@ if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(ohString1, ohString2)
     end)
 
-    -- Hop Server
+    -- Hop Server với nhiều luồng
     spawn(function()
         while wait() do
             if Server_Hop then
-                wait(wait_Time)
-                TPReturner() -- Server hop function call
+                spawn(function()
+                    wait(math.random(wait_Time - 5, wait_Time + 5)) -- Giãn cách ngẫu nhiên
+                    pcall(TPReturner)
+                end)
                 print("Đang tìm server mới...")
             end
         end
@@ -83,16 +87,12 @@ end
 spawn(function()
     while wait() do
         pcall(function()
-            -- Lấy folder ChestModels
             local ChestModels = game:GetService("Workspace"):FindFirstChild("ChestModels")
             if ChestModels then
-                -- Duyệt qua tất cả chest trong ChestModels
                 for _, chest in pairs(ChestModels:GetChildren()) do
-                    -- Kiểm tra nếu chest có RootPart
                     if chest:FindFirstChild("RootPart") then
-                        -- Teleport đến RootPart của chest
                         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = chest.RootPart.CFrame
-                        wait(0.1) -- Chờ một chút trước khi đến chest tiếp theo
+                        wait(0.1)
                     end
                 end
             else
