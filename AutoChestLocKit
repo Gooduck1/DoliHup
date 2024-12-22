@@ -1,5 +1,5 @@
 getgenv().Server_Hop = true
-getgenv().wait_Time = 35 -- Thời gian chờ giữa các lần đổi server ( tính bằng giây)
+getgenv().wait_Time = 25 -- Thời gian chờ giữa các lần đổi server (giây)
 
 local placeId = game.PlaceId
 if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
@@ -45,7 +45,7 @@ if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
                     table.insert(AllIDs, ID)
                     writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
                     game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, ID, game.Players.LocalPlayer)
-                    wait(1.5) 
+                    wait(2)
                     break
                 end
             end
@@ -62,23 +62,23 @@ if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
                         for _, chest in pairs(ChestModels:GetChildren()) do
                             if chest.Name == chestType and chest:FindFirstChild("RootPart") then
                                 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = chest.RootPart.CFrame
-                                wait(0.6) -- Giảm tốc độ teleport thêm
-                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, chest.RootPart, 0) -- Touch
                                 wait(0.1)
+                                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, chest.RootPart, 0) -- Touch
+                                wait(0.01)
                                 firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, chest.RootPart, 1) -- Untouch
                             end
                         end
                     end
                 end
             end)
-            wait(0.3) -- Giảm thời gian chờ giữa các lần teleport
+            wait(0.2) -- Thời gian chờ giữa các lần teleport chậm lại một chút
         end
     end
 
     -- Set Team
     spawn(function()
         local ohString1 = "SetTeam"
-        local ohString2 = "Pirates" -- Thay bằng "Marines" nếu chọn Marines
+        local ohString2 = "Pirates" -- Thay bằng "Marines" nếu muốn chọn team Marines
         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(ohString1, ohString2)
     end)
 
@@ -95,15 +95,4 @@ if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
 
     -- Teleport to chests
     spawn(TeleportToChests)
-
-    -- Handle Kick Detection and Respawn
-    local function KickHandler()
-        while wait(2) do 
-            if game.Players.LocalPlayer.UserId and not game.Players.LocalPlayer.Character then
-                TPReturner()
-            end
-        end
-    end
-
-    spawn(KickHandler)
-end 
+end
