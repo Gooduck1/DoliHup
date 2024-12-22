@@ -101,3 +101,13 @@ spawn(function()
         end)
     end
 end)
+
+-- Anti-AFK
+spawn(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    print("Anti-AFK đã được kích hoạt.")
+end)
