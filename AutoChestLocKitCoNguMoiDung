@@ -1,5 +1,5 @@
 getgenv().Server_Hop = true
-getgenv().wait_Time = 35 -- Thời gian chờ giữa các lần đổi server (giây)
+getgenv().wait_Time = 30 -- Thời gian chờ giữa các lần đổi server (giây)
 
 local placeId = game.PlaceId
 if placeId == 2753915549 or placeId == 4442272183 or placeId == 7449423635 then
