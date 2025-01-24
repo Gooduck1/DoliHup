@@ -1,13 +1,22 @@
--- Bật Auto Sell cho Rare, Legendary, Epic trong NewYearCrate
+-- Bật Auto Sell cho Rare, Legendary, Epic
 local rarities = {"Rare", "Legendary", "Epic"}
 
 for _, rarity in ipairs(rarities) do
-    local args = {
+    -- Bật Auto Sell trong NewYearCrate
+    local crateArgs = {
         [1] = "NewYearCrate",
         [2] = rarity
     }
-    game:GetService("ReplicatedStorage").Events.TogglePoolAutoSell:InvokeServer(unpack(args))
+    game:GetService("ReplicatedStorage").Events.TogglePoolAutoSell:InvokeServer(unpack(crateArgs))
     wait() -- Đợi 0.5 giây để tránh spam
+
+    -- Bật Auto Sell chung cho Summon
+    local summonArgs = {
+        [1] = "ToggleAutoSell",
+        [2] = rarity
+    }
+    game:GetService("ReplicatedStorage").Events.SummoningEvent.SummonFunction:InvokeServer(unpack(summonArgs))
+    wait() -- Đợi 0.5 giây giữa mỗi lần kích hoạt
 end
 
 -- Danh sách các code cần nhập
@@ -22,10 +31,9 @@ local codes = {
     "!15kReacts"
 }
 
--- Đổi toàn bộ code
 for _, code in ipairs(codes) do
     game:GetService("ReplicatedStorage").Events.UiCommunication:FireServer("Codes/RedeemCode", code)
-    wait(0.5) -- Đợi 1 giây giữa mỗi lần nhập code để tránh lỗi spam
+    wait(0.5) -- Đợi 0.5 giây giữa mỗi lần nhập code để tránh lỗi spam
 end
 
 -- Hàm mở 10 rương "EventPresent" liên tục
@@ -42,8 +50,19 @@ local function openCratesLoop()
                 ["HideSlotBar"] = false
             }
         }
-
         game:GetService("ReplicatedStorage").Events.UiCommunication:FireServer(unpack(args))
+        print("Đã mở 10 rương EventPresent.")
+    end
+end
+
+-- Hàm chạy vòng lặp triệu hồi 10 lần
+local function summonLoop()
+    while wait() do -- Đợi 1 giây giữa mỗi lần triệu hồi
+        local summonArgs = {
+            [1] = "Summon10"
+        }
+        game:GetService("ReplicatedStorage").Events.SummoningEvent.SummonEvent:FireServer(unpack(summonArgs))
+        print("Đã triệu hồi 10 đơn vị.")
     end
 end
 
@@ -60,19 +79,42 @@ local function teleportToPosition()
     print("Đã teleport đến vị trí:", targetCFrame)
 end
 
--- Script mua 40 TraitCrystal
-local args = {
-    [1] = "EventShop/BuyItem",
-    [2] = {
-        ["Item"] = "TraitCrystal",
-        ["Amount"] = 40
+-- Script thiết lập cài đặt
+local function configureSettings()
+    local settingsArgs = {
+        [1] = {
+            ["SoundMasterVolume"] = 1,
+            ["DamageIndicator"] = true,
+            ["StatusEffectVFX"] = true,
+            ["BGMVolume"] = 1,
+            ["InstantCrateOpen"] = true,
+            ["UnitVFX"] = true,
+            ["TraitRerollCooldown"] = 0,
+            ["AutoLockMythicals"] = true,
+            ["UnitSFXVolume"] = 1,
+            ["AutoSkip"] = true,
+            ["AutoLockSecrets"] = true,
+            ["LowGFX"] = false,
+            ["GeneralSFXVolume"] = 1,
+            ["PerformantWindows"] = false,
+            ["SummonAnimation"] = false,
+            ["ShowMaxRangeOnPlace"] = true
+        }
     }
-}
 
-game:GetService("ReplicatedStorage").Events.UiCommunication:FireServer(unpack(args))
+    game:GetService("ReplicatedStorage").Events.SettingsEvent:FireServer(unpack(settingsArgs))
+    print("Đã thiết lập cài đặt.")
+end
 
--- Teleport sau khi hoàn thành
+-- Thực thi các chức năng
 teleportToPosition()
+configureSettings()
 
--- Chạy vòng lặp mở rương
-openCratesLoop()
+-- Chạy các vòng lặp song song
+spawn(function()
+    openCratesLoop()
+end)
+
+spawn(function()
+    summonLoop()
+end)
