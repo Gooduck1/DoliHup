@@ -7,12 +7,14 @@ for _, rarity in ipairs(rarities) do
         [2] = rarity
     }
     game:GetService("ReplicatedStorage").Events.TogglePoolAutoSell:InvokeServer(unpack(args))
-    wait() -- Đợi 0.5 giây để tránh spam
+    wait(0.5) -- Đợi 0.5 giây để tránh spam
 end
 
 -- Danh sách các code cần nhập
 local codes = {
     "!Reacts25K",
+    "Update5!",
+    "GhostTunnel!",
     "100MVISITS",
     "WorldCollisionFixes",
     "miniupd",
@@ -29,7 +31,7 @@ end
 
 -- Hàm mở 10 rương "EventPresent" liên tục
 local function openCratesLoop()
-    while true do
+    while wait(1) do -- Đợi 1 giây mỗi lần mở rương
         local args = {
             [1] = "Crates/Open10",
             [2] = "EventPresent",
@@ -43,7 +45,6 @@ local function openCratesLoop()
         }
 
         game:GetService("ReplicatedStorage").Events.UiCommunication:FireServer(unpack(args))
-        wait() -- Đợi 1 giây giữa mỗi lần mở rương để tránh lỗi spam
     end
 end
 
